@@ -32,6 +32,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         LocationListener,
         ResultCallback<Status> {
 
+
     Intent mServiceIntent;
     private SensorService mSensorService;
 
@@ -48,6 +49,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
     GoogleApiClient googleApiClient;
     private static final String TAG = "GeofenceLocation";
+
 
 
     public static Intent makeNotificationIntent(Context context, String msg) {
