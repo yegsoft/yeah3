@@ -26,6 +26,11 @@ import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.model.Marker;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 public class MainActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
@@ -69,11 +74,9 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         mServiceIntent = new Intent(getCtx(), mSensorService.getClass());
         if (!isMyServiceRunning(mSensorService.getClass())) {
             startService(mServiceIntent);
-        }
+        }}
 
 
-
-    }
 
     private boolean isMyServiceRunning(Class<?> serviceClass) {
         ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
@@ -170,31 +173,37 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     private Marker locationMarker;
 
 
+
     // Start Geofence creation process
     private void startGeofence() {
         Log.i(TAG, "startGeofence()");
 
-        Geofence geofence = createGeofence();
-        GeofencingRequest geofenceRequest = createGeofenceRequest(geofence);
-        addGeofence(geofenceRequest);
+        DatabaseReference oku = FirebaseDatabase.getInstance().getReference().child("konumlar");
+        ValueEventListener listener = new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                  long size = dataSnapshot.getChildrenCount();
+                    Log.d("size", " "+size);
 
-        geofence = createGeofence2();
-        geofenceRequest = createGeofenceRequest(geofence);
-        addGeofence(geofenceRequest);
+                for (int i = 1; i <= size; i++) {
+                    String holdName = dataSnapshot.child("" + i).child("isim").getValue(String.class);
+                    double holdLat = dataSnapshot.child("" + i).child("latitude").getValue(double.class);
+                    double holdLng = dataSnapshot.child("" + i).child("longitude").getValue(double.class);
+                    Log.d("size"," "+holdLat);
+                    Geofence geofence = createGeofence(holdName,holdLat,holdLng);
+                    GeofencingRequest geofenceRequest = createGeofenceRequest(geofence);
+                    addGeofence(geofenceRequest);
 
-        geofence = createGeofence3();
-        geofenceRequest = createGeofenceRequest(geofence);
-        addGeofence(geofenceRequest);
+                }
 
-        geofence = createGeofence4();
-        geofenceRequest = createGeofenceRequest(geofence);
-        addGeofence(geofenceRequest);
+            }
 
-        geofence = createGeofence5();
-        geofenceRequest = createGeofenceRequest(geofence);
-        addGeofence(geofenceRequest);
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
 
-    }
+            }
+        };oku.addListenerForSingleValueEvent(listener);}
+
 
 
     private static final long GEO_DURATION = 60 * 60 * 1000;
@@ -202,59 +211,25 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     private static final float GEOFENCE_RADIUS = 500.0f; // in meters
 
     // Create a Geofence
-    private Geofence createGeofence() {
+
+
+
+
+
+    private Geofence createGeofence(String a,double b, double c) {
 
 
         return new Geofence.Builder()
-                .setRequestId("Akçaabat")
-                .setCircularRegion(41.022099, 39.570160, GEOFENCE_RADIUS)
+                .setRequestId(a)
+                .setCircularRegion(b, c, GEOFENCE_RADIUS)
                 .setExpirationDuration(Geofence.NEVER_EXPIRE)
                 .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER)
                 .build();
     }
-    private Geofence createGeofence2() {
-
-
-        return new Geofence.Builder()
-                .setRequestId("Sürmene")
-                .setCircularRegion(40.911715, 40.118717, GEOFENCE_RADIUS)
-                .setExpirationDuration(Geofence.NEVER_EXPIRE)
-                .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER)
-                .build();
-    }
-    private Geofence createGeofence3() {
-
-
-        return new Geofence.Builder()
-                .setRequestId("Maçka")
-                .setCircularRegion(40.814207, 39.610737, GEOFENCE_RADIUS)
-                .setExpirationDuration(Geofence.NEVER_EXPIRE)
-                .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER)
-                .build();
-    }
-    private Geofence createGeofence4() {
-
-
-        return new Geofence.Builder()
-                .setRequestId("Tonya")
-                .setCircularRegion(40.886064, 39.290843, GEOFENCE_RADIUS)
-                .setExpirationDuration(Geofence.NEVER_EXPIRE)
-                .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER)
-                .build();
-    }
-    private Geofence createGeofence5() {
 
 
 
-        return new Geofence.Builder()
-                .setRequestId("Hamsiköy")
-                .setCircularRegion(40.687377, 39.480178, GEOFENCE_RADIUS)
-                .setExpirationDuration(Geofence.NEVER_EXPIRE)
-                .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER)
-                .build();
 
-
-    }
 
 
     // Create a Geofence Request
