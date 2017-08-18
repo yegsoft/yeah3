@@ -23,6 +23,7 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import com.google.android.gms.location.Geofence;
+import com.google.android.gms.location.GeofencingRequest;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.GoogleMap.OnMapClickListener;
@@ -32,6 +33,11 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,12 +53,10 @@ public class TrabzonMap extends AppCompatActivity implements
         OnMapAndViewReadyListener.OnGlobalLayoutAndMapReadyListener {
 
     String track;
-
-    private static final LatLng AKCAABAT = new LatLng(41.022099, 39.570160);
-    private static final LatLng SURMENE = new LatLng(40.911715, 40.118717);
-    private static final LatLng MACKA = new LatLng(40.814207, 39.610737);
-    private static final LatLng TONYA = new LatLng(40.886064, 39.290843);
-    private static final LatLng HAMSIKOY = new LatLng(40.687377, 39.480178);
+    String zone;
+    double lat;
+    double lng;
+    public LatLng KONUM=new LatLng(lat,lng);
 
     private GoogleMap mMap = null;
 
@@ -63,7 +67,9 @@ public class TrabzonMap extends AppCompatActivity implements
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.trabzonmaplay);
-        // tamamlanacak getGeofenceTrasitionDetails(Geofence.GEOFENCE_TRANSITION_ENTER,);
+
+
+
 
 
         SupportMapFragment mapFragment =
@@ -93,43 +99,65 @@ public class TrabzonMap extends AppCompatActivity implements
         map.setContentDescription("Demo showing how to close the info window when the currently"
             + " selected marker is re-tapped.");
 
-        LatLngBounds bounds = new LatLngBounds.Builder()
-                .include(HAMSIKOY)
-                .include(MACKA)
-                .include(TONYA)
-                .include(AKCAABAT)
-                .include(SURMENE)
-                .build();
-        mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, 50));
     }
 
     public void addMarkersToMap() {
-       mMap.addMarker(new MarkerOptions()
-                .position(AKCAABAT)
-                .title("Akçaabat Horonu")
-                .snippet("Akçaabat"));
+        if(getIntent().getExtras() != null){
+
+            String location = getIntent().getExtras().getString("location");
+            zone=location;
+        }
 
 
-        mMap.addMarker(new MarkerOptions()
-                .position(MACKA)
-                .title("Maçka Yolları Taşlı")
-                .snippet("Maçka"));
+        DatabaseReference oku = FirebaseDatabase.getInstance().getReference().child("konumlar");
+        ValueEventListener listener = new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                long size = dataSnapshot.getChildrenCount();
+                int kayit=1;
+                Log.d("ZONE"," "+zone);
 
-        mMap.addMarker(new MarkerOptions()
-                .position(SURMENE)
-                .title("Oy Çalamadum Gitti")
-                .snippet("Sürmene"));
+                for (int i = 1; i <= size; i++) {
+                    String holdName = dataSnapshot.child("" + i).child("isim").getValue(String.class);
+                    if (holdName.equals(zone))  {
+                        kayit=i;
+                        break;
+                    }
+                }
+                double holdLat = dataSnapshot.child("" + kayit).child("latitude").getValue(double.class);
+                double holdLng = dataSnapshot.child("" + kayit).child("longitude").getValue(double.class);
+                String youtube = dataSnapshot.child("" + kayit).child("link").getValue(String.class);
+                lat=holdLat;
+                lng=holdLng;
+                track=youtube;
+                Log.d("holdlat"," "+holdLat);
+                Log.d("holdlng"," "+holdLng);
 
-        mMap.addMarker(new MarkerOptions()
-                .position(HAMSIKOY)
-                .title("Hamsiköy")
-                .snippet("Hamsiköy"));
+                KONUM=new LatLng(lat,lng);
+                Log.d("LAT"," "+lat);
+                Log.d("LNG"," "+lng);
+                mMap.addMarker(new MarkerOptions()
+                        .position(KONUM)
+                        .title("Akçaabat Horonu")
+                        .snippet("Akçaabat")
+                        .visible(true));
 
 
-        mMap.addMarker(new MarkerOptions()
-                .position(TONYA)
-                .title("Tonya")
-                .snippet("Tonya"));
+                LatLngBounds bounds = new LatLngBounds.Builder()
+                        .include(KONUM)
+                        .build();
+                mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, 50));
+
+            };
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        };oku.addListenerForSingleValueEvent(listener);
+
+
+
     }
 
     @Override
