@@ -107,8 +107,7 @@ public class TrabzonMap extends AppCompatActivity implements
        mMap.addMarker(new MarkerOptions()
                 .position(AKCAABAT)
                 .title("Akçaabat Horonu")
-                .snippet("Akçaabat")
-                .visible(false));
+                .snippet("Akçaabat"));
 
 
         mMap.addMarker(new MarkerOptions()
